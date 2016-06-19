@@ -124,6 +124,7 @@
     <ClInclude Include="comp_array_inl.h" />
     <ClInclude Include="csr_mat.h" />
     <ClInclude Include="csr_mat_inl.h" />
+    <ClInclude Include="timer.h" />
     <ClInclude Include="types.h" />
   </ItemGroup>
   <ItemGroup>

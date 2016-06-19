@@ -11,6 +11,8 @@ self_t::csr_mat(TIdx rows, TIdx cols, TContainer& pairs, bool sorted)
 	: rows(rows)
 	, cols(cols) 
 {
+    
+
 	if( ! sorted ) {
 		sort(pairs, [&](csr_data a, csr_data b) { return index(a) < index(b); });
 	}
@@ -47,6 +49,8 @@ self_t::csr_mat(TIdx rows, TIdx cols, TContainer& pairs, bool sorted)
 
 	ia = new comp_array<TIdx, TVal>(rows + 1, ia_temp);
 	free(ia_temp);
+
+    
 }
 
 _TMPL_DECL_ template < typename F >
@@ -107,17 +111,45 @@ _TMPL_DECL_		self_t&		self_t::add(const self_t &a) {
 	ASSERT(a.rows == rows && a.cols == cols);
 
 	stable_vector<csr_data> res;
+    
+    auto ti_it  = this->ia->get_comp_iterator_prev();
+    auto ai_it  = a.ia->get_comp_iterator_prev();
+    ti_it.next();
+    ai_it.next();
 
-	for (TIdx i = 0; i < rows; ++i) {
-		TIdx tj_from	= ia[i],
-			 tj_to		= ia[i + 1] - 1;
-		TIdx aj_from	= a.ia[i],
-			 aj_to		= a.ia[i + 1] - 1;
-		bool t_end		= tj_from >= tj_to + 1;
-		bool a_end		= aj_from >= aj_to + 1;
-		TIdx to_add_j;
-		TVal to_add_val;
-
+    //for (TIdx i = 0; i < rows; ++i) {
+    do {
+        TIdx    tj_from, tj_to, aj_from, aj_to;
+        bool    t_end, a_end;
+        TIdx    to_add_i;
+        if( std::get<0>( ti_it.current() ) < std::get<0>( ai_it.current() ) ) {
+            a_end       = true;
+            t_end       = false;
+            tj_from     = std::get<2>( ti_it.current() );
+            tj_to       = std::get<1>( ti_it.current() ) - 1;
+            to_add_i    = std::get<0>( ti_it.current() ) - 1;
+            ti_it.next();
+        } else if( std::get<0>( ti_it.current() ) > std::get<0>( ai_it.current() ) ) {
+            t_end       = true;
+            a_end       = false;
+            aj_from     = std::get<2>( ai_it.current() );
+            aj_to       = std::get<1>( ai_it.current() ) - 1;
+            to_add_i    = std::get<0>( ti_it.current() ) - 1;
+            ai_it.next();
+        } else {
+            tj_from     = std::get<2>( ti_it.current() );
+            tj_to       = std::get<1>( ti_it.current() ) - 1;
+            aj_from     = std::get<2>( ai_it.current() );
+            aj_to       = std::get<1>( ai_it.current() ) - 1;
+            t_end       = tj_from >= tj_to + 1; // false
+            a_end       = aj_from >= aj_to + 1; // false
+            to_add_i    = std::get<0>( ti_it.current() ) - 1;
+            ti_it.next();
+            ai_it.next();
+        }
+		TIdx    to_add_j;
+		TVal    to_add_val;
+        
 		while (!(t_end && a_end)) {
 			if (!t_end && (a_end || ja[tj_from] < a.ja[aj_from])) {
 				to_add_val	= this->a[tj_from];
@@ -135,12 +167,13 @@ _TMPL_DECL_		self_t&		self_t::add(const self_t &a) {
 				++tj_from;  ++aj_from;
 			}
 			if (to_add_val != TVal(0)) {
-				res.push_back(csr_data{ i, to_add_j, to_add_val });
+				res.push_back(csr_data{ to_add_i, to_add_j, to_add_val });
 			}
 			t_end = tj_from >= tj_to + 1;
 			a_end = aj_from >= aj_to + 1;
 		}
-	}
+    } while( ! ( ti_it.end() && ai_it.end() ) );
+
 	return *this = *(new csr_mat(rows, cols, res, true));
 }
 
@@ -151,9 +184,9 @@ _TMPL_DECL_		self_t&		self_t::sub(const self_t &a) {
 
 	for (TIdx i = 0; i < rows; ++i) {
 		TIdx tj_from	= ia[i],
-			tj_to		= ia[i + 1] - 1;
+			 tj_to		= ia[i + 1] - 1;
 		TIdx aj_from	= a.ia[i],
-			aj_to		= a.ia[i + 1] - 1;
+			 aj_to		= a.ia[i + 1] - 1;
 		bool t_end		= tj_from >= tj_to + 1;
 		bool a_end		= aj_from >= aj_to + 1;
 		TIdx to_add_j;
