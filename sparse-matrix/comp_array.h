@@ -59,7 +59,7 @@ struct comp_array {
 		bool next() {
 			++j;
 			if (strike > 0) {
-				--strike;
+				--strike; 
 			} else {
 				++i;
 				auto find = arr->comp_elms.find(j);

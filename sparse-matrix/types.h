@@ -3,6 +3,17 @@
 #define IC inline
 #define ICF __forceinline
 
+#include <exception>
+
+#ifdef _DEBUG
+#	define ASSERT( x )																\
+		if( !( x ) ) {																\
+			throw new std::exception("AssertException : " ## #x);					\
+		}
+#else 
+#	define ASSERT(x)
+#endif
+
 typedef	unsigned	char		u8;
 typedef	unsigned	short		u16;
 typedef	unsigned	int			u32;

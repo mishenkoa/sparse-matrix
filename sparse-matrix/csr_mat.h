@@ -33,7 +33,7 @@ private:
 	TIdx				rows, cols;
 	TIdx				nnz;
 	shared_array <TIdx>	ja;		// column numbers for elements a
-	comp_array <TIdx, TVal> ia;	// elements count
+	comp_array<TIdx, TVal>* ia;	// elements count
 	shared_array <TVal> a;		// matrix elements
 	TIdx				size_a; // size of shared array a
 

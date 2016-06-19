@@ -76,6 +76,9 @@
     <IncludePath>A:\~3rdPartyDependency\boost_1_60_0;$(IncludePath)</IncludePath>
     <LibraryPath>A:\~3rdPartyDependency\boost_1_60_0\stage\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>D:\YandexDisk\GameData\~3rdPartyDependency\boost_1_60_0;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>

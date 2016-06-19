@@ -42,7 +42,7 @@ _TMPL_DECL_		self_t::comp_array(TIdx size, TVal * full_array)
 }
 
 _TMPL_DECL_ template < typename TContainer, typename TMap >
-TVal* self_t::comp_arr(TIdx size, TContainer const& comp_array, TMap const& map)
+static TVal* self_t::comp_arr(TIdx size, TContainer const& comp_array, TMap const& map)
 {
 	size_comp = comp_array.size();
 	arr = new TVal[size_comp];
@@ -77,7 +77,7 @@ ICF void		self_t::iterate(F&& func) const {		// func : pair<TIdx : index, TVal :
 
 _TMPL_DECL_
 self_t&			self_t::out( std::ostream& ostream) const {
-	iterate([&](pair<TIdx, TVal> mew)
+	iterate([&](std::pair<TIdx, TVal> mew)
 	{
 		ostream << format("(idx: %1%, val: %2%)\n") % mew.first % mew.second;
 	});

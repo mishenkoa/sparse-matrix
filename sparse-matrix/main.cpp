@@ -30,10 +30,11 @@ int main() {
 
 	};
 
-	auto mat = int_mat(10, 10, v);
+	   auto mat = int_mat(10, 10, v);
 	//auto mat2 = int_mat(10, 10, v1);
 
-	mat.out( std::cout);
+	  mat.out( std::cout);
+	  
 	//mat.eq(mat2);
 
 	//mat.mul( mat2 ).out( cout );
@@ -45,12 +46,12 @@ int main() {
 
 	//mat.mul(mat2).out( cout );
 
-	//auto a = comp_array<s32, s32>(19, new s32[19]{ 1,1,1,1,1,1,1,1,1,1,2,3,3,3,234,2,34,2,34 });
-	//a.out(cout);
-	//auto it = a.get_uncomp_iterator();
-	//while (it.next()) {
-	//	cout << format("(idx: %1%, val: %2%)\n") % it.current().first % it.current().second;
-	//}
+	/*auto a = comp_array<s32, s32>(19, new s32[19]{ 1,1,1,1,1,1,1,1,1,1,2,3,3,3,234,2,34,2,34 });
+	a.out(std::cout);
+	auto it = a.get_uncomp_iterator();
+	while (it.next()) {
+		std::cout << format("(idx: %1%, val: %2%)\n") % it.current().first % it.current().second;
+	}*/
 
 	system( "pause" );
 	return 0;
