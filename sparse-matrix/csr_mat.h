@@ -1,12 +1,12 @@
 #pragma once
+#include <iomanip>
 #include <boost/shared_array.hpp>
 #include <boost/container/stable_vector.hpp>
 #include <boost/format.hpp>
-#include "types.h"
-#include <map>
-#include "comp_array.h"
-#include <iomanip>
 #include <boost/range/algorithm/sort.hpp>
+#include <map>
+#include "types.h"
+#include "comp_array.h"
 
 using namespace boost;
 using namespace container;
@@ -15,8 +15,6 @@ using namespace container;
 #define _TMPL_DECL_		template< typename TVal, typename TIdx >
 
 _TMPL_DECL_ class csr_mat {
-
-//typedef comp_array<TVal, TIdx> row_array_t;
 
 //---------------------------------- Nested structures
 public:
@@ -30,12 +28,13 @@ public:
 	
 //---------------------------------- Data
 private:
-	TIdx				rows, cols;
-	TIdx				nnz;
-	shared_array <TIdx>	ja;		// column numbers for elements a
-	comp_array<TIdx, TVal>* ia;	// elements count
-	shared_array <TVal> a;		// matrix elements
-	TIdx				size_a; // size of shared array a
+    TIdx				    rows;
+    TIdx                    cols;
+	TIdx				    nnz;
+	shared_array <TIdx>	    ja;		// column numbers for elements a
+	comp_array<TIdx, TVal>* ia;	    // elements count
+	shared_array <TVal>     a;		// matrix elements
+	TIdx				    size_a; // size of shared array a
 
 //---------------------------------- Constructors
 public:
