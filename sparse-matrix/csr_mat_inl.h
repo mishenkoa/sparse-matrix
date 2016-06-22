@@ -5,11 +5,14 @@
 //  
 #pragma once
 #include <exception>
+#include <boost/concept_check.hpp>
 
 _TMPL_DECL_ template < typename TContainer>
 self_t::csr_mat( TIdx rows, TIdx cols, TContainer& pairs, bool sorted )
 	: rows( rows )
 	, cols( cols ) {
+
+    BOOST_RANGE_CONCEPT_ASSERT( ( RandomAccessRangeConcept<TContainer> ) );
 
 	if( ! sorted ) {
 		sort( pairs, [&]( csr_data a, csr_data b ) { return index(a) < index(b); } );
@@ -18,38 +21,42 @@ self_t::csr_mat( TIdx rows, TIdx cols, TContainer& pairs, bool sorted )
 	size_a				= ( TIdx ) pairs.size();
 	a					= val_array_t( new TVal[size_a] );
 	ja					= idx_array_t( new TIdx[size_a] );
+    auto ia_comp_vals   = stable_vector<TIdx>();    
+    auto ia_comp_elms   = std::map<TIdx, TIdx>();   
+    ia_comp_vals.push_back( TVal( 0 ) );
 
-	TIdx * ia_temp		= (TIdx * ) malloc( sizeof( TIdx ) * ( rows + 1 ) );
-	ASSERT              ( ia_temp );                                    // check for nullptr
-    ia_temp[0]          = TIdx( 0 );
     TIdx i			    = 0;
     TIdx ilast		    = 0;
     
 	std::for_each( pairs.begin(), pairs.end(), [&]( csr_data pair ) {
         if( pair.val == TVal( 0 ) ) {
-            throw std::invalid_argument( "pairs " );                    // passing zeroes in constructor prohibited
+            throw std::invalid_argument( "pairs" );                    // passing zeroes in constructor prohibited
         }
 		a[i]	        = pair.val;
 		ja[i]	        = pair.j;
 		
         if( ilast != pair.i ) {
-			for( TIdx k = ilast + 1; k <= pair.i; k++ ) {               // filling emptyes
-				ia_temp[k] = i;
-			}
+
+            auto count = pair.i - ilast;    
+            if( count != 1 ) {              
+                ia_comp_elms[ilast + 1] = count;    
+            }                               
+            ia_comp_vals.push_back( i );    
+
 			ilast       = pair.i;
 		}
 		
         i++;
 	} );
 
-	for( TIdx k = ilast + 1; k <= rows; k++ ) {                         // filling emptyes
-		ia_temp[k] = i;
-	}
+    auto count = rows - ilast;  
+    if( count != 1 ) {          
+        ia_comp_elms[ilast + 1] = count;
+    }                           
+    ia_comp_vals.push_back( i );
 
 	nnz                 = size_a;
-	ia_temp[rows]       = nnz;
-	ia                  = new cm_array_t( rows + 1, ia_temp );
-	free                ( ia_temp );
+	ia                  = cm_array_t::construct( ia_comp_vals, rows + 1, ia_comp_elms );
 }
 
 _TMPL_DECL_ 
@@ -106,7 +113,7 @@ _TMPL_DECL_		TVal		self_t::get( TIdx row, TIdx col ) const {
 	return                  ( ref == nullptr ? TVal( 0 ) : * ref );
 }
 
-_TMPL_DECL_		self_t&		self_t::add( const self_t &a ) {
+_TMPL_DECL_	    self_t&		self_t::add( const self_t &a ) {
 	ASSERT                  ( a.rows == rows && a.cols == cols );
 
 	stable_vector<csr_data> res;
@@ -154,7 +161,7 @@ _TMPL_DECL_		self_t&		self_t::add( const self_t &a ) {
 		TIdx to_add_j;
 		TVal to_add_val;
         
-		while (!(t_end && a_end)) {
+		while ( ! ( t_end && a_end ) ) {
 			if (!t_end && (a_end || ja[tj_from] < a.ja[aj_from])) {
 				to_add_val	= this->a[tj_from];
 				to_add_j	= ja[tj_from];
@@ -301,7 +308,7 @@ _TMPL_DECL_		self_t&		self_t::mul( const self_t &a ) {
     return                  ( *this = *( new csr_mat( rows, a.cols, res, true ) ) );
 }
 
-_TMPL_DECL_		ICF bool	self_t::eq( const self_t &a ) {
+_TMPL_DECL_		bool	    self_t::eq( const self_t &a ) {
 
     if( cols != a.cols || rows != a.rows || nnz != a.nnz ) {
         return              ( false );
@@ -313,11 +320,15 @@ _TMPL_DECL_		ICF bool	self_t::eq( const self_t &a ) {
         }
     }
 
-    for( TIdx i = 0; i < rows + 1; i++ ) {
+    if( ! ia->eq( *a.ia ) ) {
+        return              ( false );
+    }
+
+    /*for( TIdx i = 0; i < rows + 1; i++ ) {
         if( ( *ia )[i] != ( * a.ia )[i] ) {
             return          ( false );
         }
-    }
+    }*/
 
     return                  ( true );
 }

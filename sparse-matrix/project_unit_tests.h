@@ -7,6 +7,7 @@
 #include "unit_test.h"
 #include "comp_array.h"
 #include "csr_mat.h"
+#include <limits>
 
 namespace testing {
 
@@ -185,8 +186,8 @@ bool csr_mat_test_mul       () {
 }
 
 bool csr_mat_test_add       () {
-    typedef csr_mat<s32, s32>				int_mat;
-    typedef csr_mat<s32, s32>::csr_data		int_mat_data;
+    typedef csr_mat<s32, u64>				int_mat;
+    typedef csr_mat<s32, u64>::csr_data		int_mat_data;
 
     container::vector<int_mat_data> v1 = {
         int_mat_data        { 0, 0, 10 },
@@ -213,12 +214,13 @@ bool csr_mat_test_add       () {
         int_mat_data        { 5, 5, 123 },
     };
 
-    auto mat1               = int_mat( 10, 10, v1 );
-    auto mat2               = int_mat( 10, 10, v2 );
+    u64 max                 = 10000000000000000000;
+    auto mat1               = int_mat( max, max, v1 );
+    auto mat2               = int_mat( max, max, v2 );
 
     mat1.add( mat2 );
 
-    if( !( mat1.eq( int_mat( 10, 10, res2 ) ) ) ) {
+    if( !( mat1.eq( int_mat( max, max, res2 ) ) ) ) {
         return              ( false );
     }
 
@@ -238,7 +240,7 @@ bool csr_mat_test_get_ref   () {
         int_mat_data        { 5, 5, 123 },
     };
 
-    auto mat               = int_mat( 10, 10, v1 );
+    auto mat               = int_mat( 100000000, 100000000, v1 );
     
     if( mat.get( 0, 0 ) != 10 ) {
         return              ( false );
@@ -261,6 +263,62 @@ bool csr_mat_test_get_ref   () {
     return                  ( true );
 }
 
+bool csr_mat_test_neq       () {
+    typedef csr_mat<s32, s32>				int_mat;
+    typedef csr_mat<s32, s32>::csr_data		int_mat_data;
+
+    container::vector<int_mat_data> v1 = {
+        int_mat_data        { 0, 0, 10 },
+        int_mat_data        { 0, 1, 20 },
+        int_mat_data        { 2, 2, 50 },
+        int_mat_data        { 2, 3, 30 },
+        int_mat_data        { 2, 4, 70 },
+        int_mat_data        { 5, 5, 123 },
+    };
+    container::vector<int_mat_data> v2 = {
+        int_mat_data        { 0, 0, 11 },
+        int_mat_data        { 0, 1, 20 },
+        int_mat_data        { 2, 2, 50 },
+        int_mat_data        { 2, 3, 30 },
+        int_mat_data        { 2, 4, 70 },
+        int_mat_data        { 5, 5, 123 },
+    };
+    container::vector<int_mat_data> v3 = {
+        int_mat_data        { 0, 1, 20 },
+        int_mat_data        { 2, 2, 50 },
+        int_mat_data        { 2, 3, 30 },
+        int_mat_data        { 2, 4, 70 },
+        int_mat_data        { 5, 5, 123 },
+    };
+    container::vector<int_mat_data> v4 = {
+        int_mat_data        { 5, 5, 123 },
+        int_mat_data        { 0, 1, 20 },
+        int_mat_data        { 2, 2, 50 },
+        int_mat_data        { 2, 3, 30 },
+        int_mat_data        { 2, 4, 70 },
+    };
+
+    auto mat1               = int_mat( 100000000, 100000000, v1 );
+    auto mat2               = int_mat( 100000000, 100000000, v2 );
+    auto mat3               = int_mat( 100000000, 100000000, v3 );
+    auto mat4               = int_mat( 100000000, 100000000, v4 );
+    
+    if( mat1.eq( mat2 ) ) {
+        return              ( false );
+    }
+    if( mat1.eq( mat3 ) ) {
+        return              ( false );
+    }
+    if( mat2.eq( mat3 ) ) {
+        return              ( false );
+    }
+    if( ! mat4.eq( mat4 ) ) {
+        return              ( false );
+    }
+
+    return                  ( true );
+}
+
 } // namespace testing
 
 
@@ -275,5 +333,6 @@ public:
         __add_unit_test_func    ( testing::csr_mat_test_mul );
         __add_unit_test_func    ( testing::csr_mat_test_add );
         __add_unit_test_func    ( testing::csr_mat_test_get_ref );
+        __add_unit_test_func    ( testing::csr_mat_test_neq );
     }
 };

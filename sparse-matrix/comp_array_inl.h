@@ -7,7 +7,7 @@
 #define self_t			        comp_array< TVal, TIdx >
 #define _TMPL_DECL_		        template< typename TVal, typename TIdx >
 
-_TMPL_DECL_		        self_t::comp_array( TIdx size, TVal * full_array )
+_TMPL_DECL_		        self_t::comp_array  ( TIdx size, TVal * full_array )
     : size_real                 ( size )
     , comp_elms                 ( std::map<TIdx, TIdx>() ) 
 {
@@ -46,11 +46,11 @@ _TMPL_DECL_		        self_t::comp_array( TIdx size, TVal * full_array )
     }
 }
 
-_TMPL_DECL_             self_t::~comp_array() {
+_TMPL_DECL_             self_t::~comp_array () {
     __delete                 ( arr );
 }
 
-_TMPL_DECL_ TVal	    self_t::operator[]( const TIdx idx ) const {
+_TMPL_DECL_ TVal	    self_t::operator[]  ( const TIdx idx ) const {
     TIdx j                      = 0;
     TIdx i                      = 0;
     do {
@@ -62,8 +62,7 @@ _TMPL_DECL_ TVal	    self_t::operator[]( const TIdx idx ) const {
     return arr[i - 1];
 }
 
-_TMPL_DECL_ 
-ICF         void	    self_t::iterate( function<void ( TIdx, TVal )> func ) const {
+_TMPL_DECL_ ICF void	self_t::iterate     ( function<void ( TIdx, TVal )> func ) const {
 
     if( size_real == 0 )        { return; }
     TIdx j                      = 0;
@@ -77,13 +76,47 @@ ICF         void	    self_t::iterate( function<void ( TIdx, TVal )> func ) const
     } while ( j <= size_real - 1 );
 }
 
-_TMPL_DECL_ self_t&		self_t::out( std::ostream& ostream ) const {
+_TMPL_DECL_ self_t&		self_t::out         ( std::ostream& ostream ) {
 
-    iterate( [&] ( auto idx, auto val ) {
-        ostream << format( "(idx: %1%, val: %2%)\n" ) % idx % val;
-    } );
+    for( uncomp_iterator* it = new uncomp_iterator( this ); it->next(); ) {
+        //ostream << format( "(idx: %1%, val: %2%)\n" ) % it->current().get<0>() % it->current().get<1>();
+        ostream << it->current().get<1>() << " ";
+    }
 
     return const_cast< self_t& >( *this );
+}
+
+_TMPL_DECL_ template<typename T>
+static self_t*          self_t::construct   ( T _arr, TIdx _size_real, std::map<TIdx, TIdx> _comp_elms ) {
+    auto result             = new comp_array();
+    result->size_comp       = ( TIdx ) _arr.size();
+    result->arr             = __new( TVal, result->size_comp );
+    result->size_real       = _size_real;
+    result->comp_elms       = _comp_elms;
+
+    for( TIdx i = 0; i < result->size_comp; i++ ) {
+        result->arr[i]      = _arr[i];
+    }
+
+    return result;
+}
+
+_TMPL_DECL_ bool	    self_t::eq          ( self_t& a ) {
+    auto t_it = get_comp_iterator();
+    auto a_it = a.get_comp_iterator();
+
+    while( true ) {
+        t_it.next();
+        a_it.next();
+
+        if( t_it.end() ) {
+            return a_it.end();
+        }
+        if( t_it.current().get<0>() != a_it.current().get<0>() || 
+            t_it.current().get<1>() != a_it.current().get<1>() ) {
+            return false;
+        }
+    }
 }
 
 

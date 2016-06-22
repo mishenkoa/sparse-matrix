@@ -18,6 +18,7 @@ protected:
     stable_vector< function< bool () > >    t_func;
     stable_vector< pcstr >                  t_func_name;
     stable_vector< pcstr >                  failed;
+    stable_vector< f64 >                    t_func_time;
 
 public:
     void    run             ();
