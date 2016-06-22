@@ -101,6 +101,7 @@ private:
     std::map<TIdx, TIdx>	comp_elms;		// elemets what was compressed
 
 //---------------------------------- Constructors
+                            comp_array              () { }
 public:
                             comp_array              ( TIdx size, TVal * full_array );
                            ~comp_array              ();
@@ -108,13 +109,17 @@ public:
 //---------------------------------- Methods
 
     ICF void				iterate                 ( function<void ( TIdx, TVal )> func ) const;
-    self_t&					out                     ( std::ostream& ostream ) const;
+    self_t&					out                     ( std::ostream& ostream );
     TVal					operator[]              ( const TIdx idx ) const;
-    comp_iterator			get_comp_iterator       ()          { return comp_iterator( this ); }
-    comp_iterator_prev		get_comp_iterator_prev  ()          { return comp_iterator_prev( this ); }
-    uncomp_iterator			get_uncomp_iterator     ()          { return uncomp_iterator( this ); }
-    size_t					get_uncompressed_size   () const    { return size_real * 4; }					// in bytes
-    size_t					get_size                () const    { return sizeof( *this ) + 4 * size_comp; }	// in bytes
+    bool					eq                      ( self_t& a );
+    comp_iterator			get_comp_iterator       () __ret( comp_iterator( this ) )
+    comp_iterator_prev		get_comp_iterator_prev  () __ret( comp_iterator_prev( this ) )
+    uncomp_iterator			get_uncomp_iterator     () __ret( uncomp_iterator( this ) )
+    size_t					get_uncompressed_size   () const __ret( size_real * 4 )					        // in bytes
+    size_t					get_size                () const __ret( sizeof( *this ) + 4 * size_comp )       // in bytes
+
+    template<typename T>
+    static self_t*          construct               ( T _arr, TIdx _size_real, std::map<TIdx, TIdx> _comp_elms );
 };
 
 
