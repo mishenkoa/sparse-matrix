@@ -30,9 +30,18 @@
     <ClInclude Include="csr_mat_inl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="unit_test.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project_unit_tests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="unit_test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

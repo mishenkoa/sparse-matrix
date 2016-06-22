@@ -1,3 +1,8 @@
+//  
+// Created  : 10.05.2016
+// Author   : Veyroter
+// © AshyCat, 2016 
+//  
 #pragma once
 #define BOOST_MSVC_STD_ITERATOR
 #define IC inline
@@ -6,10 +11,7 @@
 #include <exception>
 
 #ifdef _DEBUG
-#	define ASSERT( x )																\
-		if( !( x ) ) {																\
-			throw new std::exception("AssertException : " ## #x);					\
-		}
+#	define ASSERT( x )      if( !( x ) )      { throw std::exception("AssertException : " ## #x); }
 #else 
 #	define ASSERT(x)
 #endif
@@ -36,3 +38,8 @@ typedef	unsigned char const*	pcbyte;
 typedef	void*					pvoid;
 typedef	void const*				pcvoid;
 
+// OUR NEW C++ FEATURES
+
+#define __ret(DATA)             { return DATA; }
+#define __new(TYPE, SIZE)       ( TYPE * ) malloc( SIZE * sizeof( TYPE ) )
+#define __delete(POINTER)       free( POINTER )

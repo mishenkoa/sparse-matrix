@@ -4,6 +4,7 @@
 #include <boost/container/vector.hpp>
 #include "comp_array.h"
 #include "timer.h"
+#include "project_unit_tests.h"
 
 int main() {
 	typedef csr_mat<s32, s32>				int_mat;
@@ -17,14 +18,7 @@ int main() {
 	//	int_mat_data{ 3, 5, 80 },
 	//};
 
-	container::vector<int_mat_data> v1 = {
-		int_mat_data{ 0, 0, 10 },
-		int_mat_data{ 0, 1, 20 },
-		int_mat_data{ 2, 2, 50 },
-		int_mat_data{ 2, 3, 60 },
-		int_mat_data{ 2, 4, 70 },
-		int_mat_data{ 5, 5, 123 },
-	};
+
 
 	//auto mat = int_mat(1000000, 1000000, v);
 
@@ -48,7 +42,16 @@ int main() {
 		std::cout << format("(idx: %1%, val: %2%)\n") % it.current().first % it.current().second;
 	}*/
 
-
+    ////////////////////////////////////////////////////////////////////////////////////////
+/*
+	container::vector<int_mat_data> v1 = {
+		int_mat_data{ 0, 0, 10 },
+		int_mat_data{ 0, 1, 20 },
+		int_mat_data{ 2, 2, 50 },
+		int_mat_data{ 2, 3, 60 },
+		int_mat_data{ 2, 4, 70 },
+		int_mat_data{ 5, 5, 123 },
+	};
     container::vector<int_mat_data> v = {
 		int_mat_data{ 2, 2, 50 },
 		int_mat_data{ 2, 3, 60 },
@@ -73,7 +76,13 @@ int main() {
     t.start();
 	mat.sub(mat2).out(std::cout);
     t.out( std::cout );
+*/
 
+    project_unit_tests u;
+    u.run();
+    u.out_results( std::cout );
+
+    std::cout << std::endl;
 	system( "pause" );
 	return 0;
 }
