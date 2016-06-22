@@ -6,7 +6,7 @@
 #pragma once
 #include <exception>
 
-_TMPL_DECL_ template <typename TContainer>
+_TMPL_DECL_ template < typename TContainer>
 self_t::csr_mat( TIdx rows, TIdx cols, TContainer& pairs, bool sorted )
 	: rows( rows )
 	, cols( cols ) {
@@ -116,9 +116,13 @@ _TMPL_DECL_		self_t&		self_t::add( const self_t &a ) {
     ti_it.next              ();
     ai_it.next              ();
 
-	TIdx    tj_from, tj_to, aj_from, aj_to;
-	bool    t_end, a_end;
-	TIdx    to_add_i;
+    TIdx    tj_from;
+    TIdx    tj_to;
+    TIdx    aj_from;
+    TIdx    aj_to;
+    bool    t_end;
+    bool    a_end;
+    TIdx    to_add_i;
     
     do {
         if( ti_it.current().get<0>() < ai_it.current().get<0>() ) {
@@ -140,12 +144,13 @@ _TMPL_DECL_		self_t&		self_t::add( const self_t &a ) {
             tj_to           = ti_it.current().get<1>() - 1;
             aj_from         = ai_it.current().get<2>();
             aj_to           = ai_it.current().get<1>() - 1;
-            t_end           = tj_from >= tj_to + 1; // false
-            a_end           = aj_from >= aj_to + 1; // false
+            t_end           = tj_from >= tj_to + 1; 
+            a_end           = aj_from >= aj_to + 1; 
             to_add_i        = ti_it.current().get<0>() - 1;
             ti_it.next      ();
             ai_it.next      ();
         }
+
 		TIdx to_add_j;
 		TVal to_add_val;
         
@@ -214,8 +219,8 @@ _TMPL_DECL_		self_t&		self_t::sub( const self_t &a ) {
 			tj_to           = ti_it.current().get<1>() - 1;
 			aj_from         = ai_it.current().get<2>();
 			aj_to           = ai_it.current().get<1>() - 1;
-			t_end           = tj_from >= tj_to + 1; // false
-			a_end           = aj_from >= aj_to + 1; // false
+			t_end           = tj_from >= tj_to + 1; 
+			a_end           = aj_from >= aj_to + 1; 
 			to_add_i        = ti_it.current().get<0>() - 1;
 			ti_it.next();
 			ai_it.next();

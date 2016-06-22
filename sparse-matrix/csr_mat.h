@@ -50,7 +50,7 @@ private:
 
 //---------------------------------- Constructors
 public:
-	template< typename TContainer > // : TContainer< tuple< TIdx, TIdx, TVal > >
+    template < typename TContainer > // TContainer : iterable< csr_data >
 	                csr_mat     ( TIdx rows, TIdx cols, TContainer& pairs, bool sorted = false);
 
 //---------------------------------- Methods
