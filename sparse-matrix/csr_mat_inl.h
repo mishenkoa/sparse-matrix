@@ -4,151 +4,150 @@
 // © AshyCat, 2016 
 //  
 #pragma once
+#include <exception>
 
-_TMPL_DECL_ 
-template <typename TContainer>
-self_t::csr_mat(TIdx rows, TIdx cols, TContainer& pairs, bool sorted)
-	: rows(rows)
-	, cols(cols) 
-{
-    
+_TMPL_DECL_ template <typename TContainer>
+self_t::csr_mat( TIdx rows, TIdx cols, TContainer& pairs, bool sorted )
+	: rows( rows )
+	, cols( cols ) {
 
 	if( ! sorted ) {
-		sort(pairs, [&](csr_data a, csr_data b) { return index(a) < index(b); });
+		sort( pairs, [&]( csr_data a, csr_data b ) { return index(a) < index(b); } );
 	}
 
-	size_a				= pairs.size();
-	a					= shared_array<TVal>(new TVal[size_a]);
-	ja					= shared_array<TIdx>(new TIdx[size_a]);
-	TIdx *  ia_temp		= (TIdx * ) malloc( sizeof( TIdx ) * ( rows + 1 ) );
-	ASSERT( ia_temp );  // действительно ли выделили память
-	size_t i			= 0;
-	size_t ilast		= 0;
+	size_a				= ( TIdx ) pairs.size();
+	a					= val_array_t( new TVal[size_a] );
+	ja					= idx_array_t( new TIdx[size_a] );
 
-	ia_temp[0] = TIdx(0);
-
-	std::for_each(pairs.begin(), pairs.end(), [&](csr_data pair) {
-		a[i]	= pair.val;
-		ja[i]	= pair.j;
-
-		if (ilast != pair.i) {
-			for (int k = ilast + 1; k <= pair.i; k++) { // заполняем пробелы
+	TIdx * ia_temp		= (TIdx * ) malloc( sizeof( TIdx ) * ( rows + 1 ) );
+	ASSERT              ( ia_temp );                                    // check for nullptr
+    ia_temp[0]          = TIdx( 0 );
+    TIdx i			    = 0;
+    TIdx ilast		    = 0;
+    
+	std::for_each( pairs.begin(), pairs.end(), [&]( csr_data pair ) {
+        if( pair.val == TVal( 0 ) ) {
+            throw std::invalid_argument( "pairs " );                    // passing zeroes in constructor prohibited
+        }
+		a[i]	        = pair.val;
+		ja[i]	        = pair.j;
+		
+        if( ilast != pair.i ) {
+			for( TIdx k = ilast + 1; k <= pair.i; k++ ) {               // filling emptyes
 				ia_temp[k] = i;
 			}
-			ilast = pair.i;
+			ilast       = pair.i;
 		}
-		i++;
-	});
+		
+        i++;
+	} );
 
-	for (int k = ilast + 1; k <= rows; k++) { // заполняем пробелы
+	for( TIdx k = ilast + 1; k <= rows; k++ ) {                         // filling emptyes
 		ia_temp[k] = i;
 	}
 
-	nnz = size_a;
-	ia_temp[rows] = nnz;
-
-	ia = new comp_array<TIdx, TVal>(rows + 1, ia_temp);
-	free(ia_temp);
-
-    
+	nnz                 = size_a;
+	ia_temp[rows]       = nnz;
+	ia                  = new cm_array_t( rows + 1, ia_temp );
+	free                ( ia_temp );
 }
 
-_TMPL_DECL_ template < typename F >
-ICF				void		self_t::iterate(F&& func) const {
-	for (TIdx i = 0; i < rows; ++i) {
-		TIdx tj_from	= (*ia)[i];
-		TIdx tj_to		= (*ia)[i + 1] - 1;
+_TMPL_DECL_ 
+ICF				void		self_t::iterate( function<void ( csr_data )> func ) const {
+    for( TIdx i = 0; i < rows; ++i ) {
+        TIdx tj_from        = ( *ia )[i];
+        TIdx tj_to          = ( *ia )[i + 1] - 1;
 
-		while (tj_from != tj_to + 1) {
-			func(csr_data{ i, ja[tj_from], a[tj_from] });
-			++tj_from;
-		}
-	}
+        while( tj_from != tj_to + 1 ) {
+            func            ( csr_data{ i, ja[tj_from], a[tj_from] } );
+            tj_from         += 1;
+        }
+    }
 }
 
 _TMPL_DECL_		self_t&		self_t::transp() {
-	stable_vector<csr_data> res;
+    stable_vector<csr_data> res;
+    iterate                 ( [&] ( csr_data data ) { res.push_back( csr_data{ data.j, data.i, data.val } ); } );
 
-	iterate([&](csr_data data) {
-		res.push_back(csr_data{ data.j, data.i, data.val });
-	});
-
-	return *this = *(new csr_mat(cols, rows, res, false));
+    return                  ( *this = *( new csr_mat( cols, rows, res, false ) ) );
 }
 
-_TMPL_DECL_		ICF TIdx	self_t::index(const csr_data& a) const {
-	return a.i * cols + a.j;
+_TMPL_DECL_		ICF TIdx	self_t::index( const csr_data& a ) const {
+
+	return                  ( a.i * cols + a.j );
 }
 
-_TMPL_DECL_		ICF TVal*	self_t::get_ref(TIdx row, TIdx col) const {
-	ASSERT(row >= 0 && row < rows && col >= 0 && col < cols);
+_TMPL_DECL_		ICF TVal*	self_t::get_ref( TIdx row, TIdx col ) const {
 
-	auto idx_from	= (*ia)[row],
-		 idx_to		= (*ia)[row + 1] - 1;
+    ASSERT                  ( row >= 0 && row < rows && col >= 0 && col < cols );
+    auto idx_from           = ( *ia )[row];
+    auto idx_to             = ( *ia )[row + 1] - 1;
 
-	if ( idx_to < 0 ) {
-		return nullptr;
-	}
+	if( idx_to < 0 )        { return nullptr; }
 
-	auto idx = static_cast<TIdx*>(
-		bsearch(
-			&col,
-			ja.get() + idx_from,
-			idx_to - idx_from + 1,
-			sizeof TIdx,
-			[](const void* a, const void* b) {	return static_cast<s32>(*static_cast<const TIdx*>(a) - *static_cast<const TIdx*>(b));  }
-			)
-		);
-	return idx == nullptr ? nullptr : &a[idx - ja.get()];
+    auto comparator         = [] ( const void* a, const void* b ) {	
+        return              TIdx( *( const TIdx* )( a ) - *( const TIdx* )( b ) );
+    };
+
+    auto idx = static_cast< TIdx* >(
+        bsearch(
+            &col,                   // what we are looking for
+            ja.get() + idx_from,    // base pointer
+            idx_to - idx_from + 1,  // number of elements
+            sizeof TIdx,            // size of one element
+            comparator              // comparator function
+            )
+        );
+    return                  ( idx == nullptr ? nullptr : &a[idx - ja.get()] );
 }
 
-_TMPL_DECL_		TVal		self_t::get(TIdx row, TIdx col) const {
-	TVal* ref = get_ref(row, col);
-	return ref == nullptr ? TVal(0) : *ref;
+_TMPL_DECL_		TVal		self_t::get( TIdx row, TIdx col ) const {
+	TVal*  ref               = get_ref( row, col );
+	return                  ( ref == nullptr ? TVal( 0 ) : * ref );
 }
 
-_TMPL_DECL_		self_t&		self_t::add(const self_t &a) {
-	ASSERT(a.rows == rows && a.cols == cols);
+_TMPL_DECL_		self_t&		self_t::add( const self_t &a ) {
+	ASSERT                  ( a.rows == rows && a.cols == cols );
 
 	stable_vector<csr_data> res;
     
-    auto ti_it  = this->ia->get_comp_iterator_prev();
-    auto ai_it  = a.ia->get_comp_iterator_prev();
-    ti_it.next();
-    ai_it.next();
+    auto ti_it              = this->ia->get_comp_iterator_prev();
+    auto ai_it              = a.ia->get_comp_iterator_prev();
+    ti_it.next              ();
+    ai_it.next              ();
 
 	TIdx    tj_from, tj_to, aj_from, aj_to;
 	bool    t_end, a_end;
 	TIdx    to_add_i;
-    //for (TIdx i = 0; i < rows; ++i) {
+    
     do {
-        if( std::get<0>( ti_it.current() ) < std::get<0>( ai_it.current() ) ) {
-            a_end       = true;
-            t_end       = false;
-            tj_from     = std::get<2>( ti_it.current() );
-            tj_to       = std::get<1>( ti_it.current() ) - 1;
-            to_add_i    = std::get<0>( ti_it.current() ) - 1;
-            ti_it.next();
-        } else if( std::get<0>( ti_it.current() ) > std::get<0>( ai_it.current() ) ) {
-            t_end       = true;
-            a_end       = false;
-            aj_from     = std::get<2>( ai_it.current() );
-            aj_to       = std::get<1>( ai_it.current() ) - 1;
-            to_add_i    = std::get<0>( ai_it.current() ) - 1;
-            ai_it.next();
+        if( ti_it.current().get<0>() < ai_it.current().get<0>() ) {
+            a_end           = true;
+            t_end           = false;
+            tj_from         = ti_it.current().get<2>();
+            tj_to           = ti_it.current().get<1>() - 1;
+            to_add_i        = ti_it.current().get<0>() - 1;
+            ti_it.next      ();
+        } else if( ti_it.current().get<0>() > ai_it.current().get<0>() ) {
+            t_end           = true;
+            a_end           = false;
+            aj_from         = ai_it.current().get<2>();
+            aj_to           = ai_it.current().get<1>() - 1;
+            to_add_i        = ai_it.current().get<0>() - 1;
+            ai_it.next      ();
         } else {
-            tj_from     = std::get<2>( ti_it.current() );
-            tj_to       = std::get<1>( ti_it.current() ) - 1;
-            aj_from     = std::get<2>( ai_it.current() );
-            aj_to       = std::get<1>( ai_it.current() ) - 1;
-            t_end       = tj_from >= tj_to + 1; // false
-            a_end       = aj_from >= aj_to + 1; // false
-            to_add_i    = std::get<0>( ti_it.current() ) - 1;
-            ti_it.next();
-            ai_it.next();
+            tj_from         = ti_it.current().get<2>();
+            tj_to           = ti_it.current().get<1>() - 1;
+            aj_from         = ai_it.current().get<2>();
+            aj_to           = ai_it.current().get<1>() - 1;
+            t_end           = tj_from >= tj_to + 1; // false
+            a_end           = aj_from >= aj_to + 1; // false
+            to_add_i        = ti_it.current().get<0>() - 1;
+            ti_it.next      ();
+            ai_it.next      ();
         }
-		TIdx    to_add_j;
-		TVal    to_add_val;
+		TIdx to_add_j;
+		TVal to_add_val;
         
 		while (!(t_end && a_end)) {
 			if (!t_end && (a_end || ja[tj_from] < a.ja[aj_from])) {
@@ -169,187 +168,214 @@ _TMPL_DECL_		self_t&		self_t::add(const self_t &a) {
 			if (to_add_val != TVal(0)) {
 				res.push_back(csr_data{ to_add_i, to_add_j, to_add_val });
 			}
-			t_end = tj_from >= tj_to + 1;
-			a_end = aj_from >= aj_to + 1;
+			t_end           = tj_from >= tj_to + 1;
+			a_end           = aj_from >= aj_to + 1;
 		}
     } while( ! ( ti_it.end() && ai_it.end() ) );
 
-	return *this = *(new csr_mat(rows, cols, res, true));
+	return                  ( *this = *( new csr_mat( rows, cols, res, true ) ) );
 }
 
-_TMPL_DECL_		self_t&		self_t::sub(const self_t &a) {
-	ASSERT(a.rows == rows && a.cols == cols);
+_TMPL_DECL_		self_t&		self_t::sub( const self_t &a ) {
+	ASSERT                  ( a.rows == rows && a.cols == cols );
 
 	stable_vector<csr_data> res;
 
-	auto ti_it = this->ia->get_comp_iterator_prev();
-	auto ai_it = a.ia->get_comp_iterator_prev();
-	ti_it.next();
-	ai_it.next();
+	auto ti_it              = this->ia->get_comp_iterator_prev();
+	auto ai_it              = a.ia->get_comp_iterator_prev();
+	ti_it.next              ();
+	ai_it.next              ();
 
-	TIdx    tj_from, tj_to, aj_from, aj_to;
-	bool    t_end, a_end;
+    TIdx    tj_from;
+    TIdx    tj_to;
+    TIdx    aj_from;
+    TIdx    aj_to;
+    bool    t_end;
+    bool    a_end;
 	TIdx    to_add_i;
+
 	do {
-		if (std::get<0>(ti_it.current()) < std::get<0>(ai_it.current())) {
-			a_end = true;
-			t_end = false;
-			tj_from = std::get<2>(ti_it.current());
-			tj_to = std::get<1>(ti_it.current()) - 1;
-			to_add_i = std::get<0>(ti_it.current()) - 1;
-			ti_it.next();
-		}
-		else if (std::get<0>(ti_it.current()) > std::get<0>(ai_it.current())) {
-			t_end = true;
-			a_end = false;
-			aj_from = std::get<2>(ai_it.current());
-			aj_to = std::get<1>(ai_it.current()) - 1;
-			to_add_i = std::get<0>(ai_it.current()) - 1;
-			ai_it.next();
-		}
-		else {
-			tj_from = std::get<2>(ti_it.current());
-			tj_to = std::get<1>(ti_it.current()) - 1;
-			aj_from = std::get<2>(ai_it.current());
-			aj_to = std::get<1>(ai_it.current()) - 1;
-			t_end = tj_from >= tj_to + 1; // false
-			a_end = aj_from >= aj_to + 1; // false
-			to_add_i = std::get<0>(ti_it.current()) - 1;
+		if (ti_it.current().get<0>() < ai_it.current().get<0>()) {
+			a_end           = true;
+			t_end           = false;
+			tj_from         = ti_it.current().get<2>();
+			tj_to           = ti_it.current().get<1>() - 1;
+			to_add_i        = ti_it.current().get<0>() - 1;
+			ti_it.next  ();
+		} else if ( ti_it.current().get<0>() > ai_it.current().get<0>() ) {
+			t_end           = true;
+			a_end           = false;
+			aj_from         = ai_it.current().get<2>();
+			aj_to           = ai_it.current().get<1>() - 1;
+			to_add_i        = ai_it.current().get<0>() - 1;
+			ai_it.next      ();
+		} else {
+			tj_from         = ti_it.current().get<2>();
+			tj_to           = ti_it.current().get<1>() - 1;
+			aj_from         = ai_it.current().get<2>();
+			aj_to           = ai_it.current().get<1>() - 1;
+			t_end           = tj_from >= tj_to + 1; // false
+			a_end           = aj_from >= aj_to + 1; // false
+			to_add_i        = ti_it.current().get<0>() - 1;
 			ti_it.next();
 			ai_it.next();
 		}
+
 		TIdx    to_add_j;
 		TVal    to_add_val;
 
-		while (!(t_end && a_end)) {
-			if (!t_end && (a_end || ja[tj_from] < a.ja[aj_from])) {
-				to_add_val = this->a[tj_from];
-				to_add_j = ja[tj_from];
-				++tj_from;
-			}
-			else if (!a_end && (t_end || ja[tj_from] > a.ja[aj_from])) {
-				to_add_val = -a.a[aj_from];
-				to_add_j = a.ja[aj_from];
-				++aj_from;
-			}
-			else {
-				to_add_val = this->a[tj_from] - a.a[aj_from];
-				to_add_j = ja[tj_from];
-				++tj_from;  ++aj_from;
-			}
-			if (to_add_val != TVal(0)) {
-				res.push_back(csr_data{ to_add_i, to_add_j, to_add_val });
-			}
-			t_end = tj_from >= tj_to + 1;
-			a_end = aj_from >= aj_to + 1;
-		}
-	} while (!(ti_it.end() && ai_it.end()));
-	return *this = *(new csr_mat(rows, cols, res, true));
+        while( !( t_end && a_end ) ) {
+            if( !t_end && ( a_end || ja[tj_from] < a.ja[aj_from] ) ) {
+                to_add_val  = this->a[tj_from];
+                to_add_j    = ja[tj_from];
+                tj_from     += 1;
+
+            } else if( !a_end && ( t_end || ja[tj_from] > a.ja[aj_from] ) ) {
+                to_add_val  = -a.a[aj_from];
+                to_add_j    = a.ja[aj_from];
+                aj_from     += 1;
+
+            } else {
+                to_add_val  = this->a[tj_from] - a.a[aj_from];
+                to_add_j    = ja[tj_from];
+                tj_from     += 1;
+                aj_from     += 1;
+            }
+
+            if( to_add_val != TVal( 0 ) ) {
+                res.push_back( csr_data{ to_add_i, to_add_j, to_add_val } );
+            }
+
+            t_end           = tj_from >= tj_to + 1;
+            a_end           = aj_from >= aj_to + 1;
+        }
+
+    } while( !( ti_it.end() && ai_it.end() ) );
+
+    return                  ( *this = *( new csr_mat( rows, cols, res, true ) ) );
 }
 
-_TMPL_DECL_		self_t&		self_t::mul(const self_t &a) {
-	ASSERT(cols == a.rows);
-	self_t b = a;
-	b.transp();
+_TMPL_DECL_		self_t&		self_t::mul( const self_t &a ) {
+	ASSERT                  (cols == a.rows);
+	self_t b                = a;
+	b.transp                ();
 
 	stable_vector<csr_data> res;
 
-	for (TIdx i = 0; i < rows; ++i) {
-		for (TIdx j = 0; j < cols; ++j) {
-			TIdx tj_from	= (*ia)[i],
-				 tj_to		= (*ia)[i + 1] - 1;
-			TIdx aj_from	= (*b.ia)[j],
-			 	 aj_to		= (*b.ia)[j + 1] - 1;
-									
-			TVal sum = TVal(0);
-			while ((tj_from <= tj_to) && (aj_from <= aj_to)) {
-				if (ja[tj_from] < b.ja[aj_from]) {
-					++tj_from;
-				} else if (ja[tj_from] > b.ja[aj_from]) {
-					++aj_from;
-				} else {
-					sum += this->a[tj_from] * b.a[aj_from];
-					++tj_from;  ++aj_from;
-				}
-				if (sum != TVal(0)) {
-					res.push_back(csr_data{ i, j, sum });
-				}
-			}
-		}
-	}
-	return *this = *(new csr_mat(rows, a.cols, res, true));
+    for( TIdx i = 0; i < rows; ++i ) {
+        for( TIdx j = 0; j < cols; ++j ) {
+
+            TIdx tj_from    = ( *ia )[i],
+                 tj_to      = ( *ia )[i + 1] - 1;
+            TIdx aj_from    = ( *b.ia )[j],
+                 aj_to      = ( *b.ia )[j + 1] - 1;
+            TVal sum        = TVal( 0 );
+
+            while( ( tj_from <= tj_to ) && ( aj_from <= aj_to ) ) {
+
+                if( ja[tj_from] < b.ja[aj_from] ) {
+                    tj_from += 1;
+
+                } else if( ja[tj_from] > b.ja[aj_from] ) {
+                    aj_from += 1;
+
+                } else {
+                    sum     += this->a[tj_from] * b.a[aj_from];
+                    tj_from += 1;  
+                    aj_from += 1;
+                }
+
+                if( sum != TVal( 0 ) ) {
+                    res.push_back( csr_data{ i, j, sum } );
+                }
+
+            }
+        }
+    }
+
+    return                  ( *this = *( new csr_mat( rows, a.cols, res, true ) ) );
 }
 
-_TMPL_DECL_		ICF bool	self_t::eq(const self_t &a) {
-	if (cols == a.cols && rows == a.rows && nnz == a.nnz) {
-		for (size_t i = 0; i < size_a; i++) {
-			if (this->a[i] != a.a[i] || ja[i] != a.ja[i]) {
-				return false;
-			}
-		}
-		for (size_t i = 0; i < rows + 1; i++) {
-			if (ia[i] != a.ia[i]) {
-				return false;
-			}
-		}
-		return true;
-	}
-	return false;
+_TMPL_DECL_		ICF bool	self_t::eq( const self_t &a ) {
+
+    if( cols != a.cols || rows != a.rows || nnz != a.nnz ) {
+        return              ( false );
+    }
+
+    for( TIdx i = 0; i < size_a; i++ ) {
+        if( this->a[i] != a.a[i] || ja[i] != a.ja[i] ) {
+            return          ( false );
+        }
+    }
+
+    for( TIdx i = 0; i < rows + 1; i++ ) {
+        if( ( *ia )[i] != ( * a.ia )[i] ) {
+            return          ( false );
+        }
+    }
+
+    return                  ( true );
 }
 
-_TMPL_DECL_		TIdx		dignum(TVal num) {
-	return (num != abs(num))
-		? dignum<TVal, TIdx>(abs(num)) + 1
-		: (num /= TIdx(10))
-			? TIdx(1) + dignum<TVal, TIdx>(num)
-			: TIdx(1);
+_TMPL_DECL_		TIdx		dignum( TVal num ) {
+
+    return                  ( num != abs( num ) ) 
+                ?           dignum<TVal, TIdx>( abs( num ) ) + 1
+                :           ( num /= TIdx( 10 ) )
+                    ?       TIdx( 1 ) + dignum<TVal, TIdx>( num )
+                    :       TIdx( 1 );
 }
 
-_TMPL_DECL_		self_t&		self_t::out(std::ostream &ostream) const {
-	auto maxdig = new TIdx[cols];
+_TMPL_DECL_		self_t&		self_t::out( std::ostream &ostream ) const {
 
-	for (int j = 0; j < this->cols; j++) {
-		maxdig[j] = 1;
-		for (int i = 0; i < this->rows; i++) {
-			if (dignum<TVal, TIdx>(get(i, j)) > maxdig[j]) {
-				maxdig[j] = dignum<TVal, TIdx>(get(i, j));
-			}
-		}
-	}
+    TIdx * maxdig             = __new( TIdx, cols );
 
-	for (int i = 0; i < this->rows; i++) {
-		ostream << "|";
-		for (int j = 0; j < this->cols; j++) {
-			ostream << std::setw(maxdig[j] + 1) << std::setfill(' ') << this->get(i, j);
-		}
-		ostream << " |" << std::endl;
-	}
+    for( int j = 0; j < this->cols; j++ ) {
+        maxdig[j]           = 1;
 
-	delete[] maxdig;
+        for( int i = 0; i < this->rows; i++ ) {
+            if( dignum<TVal, TIdx>( get( i, j ) ) > maxdig[j] ) {
+            
+                maxdig[j]   = dignum<TVal, TIdx>( get( i, j ) );
+            }
+        }
+    }
+    
+    for( int i = 0; i < this->rows; i++ ) {
+        ostream             << "|";
+        for( int j = 0; j < this->cols; j++ ) {
+            ostream         << std::setw( maxdig[j] + 1 ) << std::setfill( ' ' ) << this->get( i, j );
+        }
+        ostream             << " |" << std::endl;
+    }
+	__delete                ( maxdig );
 
-	std::cout << "A: ";
-	for (size_t i1 = 0; i1 < size_a; i1++) {
-		ostream << a[i1] << " ";
-	} 	ostream << std::endl;
-	std::cout << "JA: ";
-	for (size_t i1 = 0; i1 < size_a; i1++) {
-		ostream << ja[i1] << " ";
-	} 	ostream << std::endl;
-	std::cout << "IA: ";
-	for (size_t i1 = 0; i1 < rows + 1; i1++) {
-		ostream << (*ia)[i1] << " ";
-	} 	ostream << std::endl;
+    ostream                 << "A: ";
+    for( TIdx i1 = 0; i1 < size_a; i1++ ) {
+        ostream             << a[i1] << " ";
+    } 	ostream             << std::endl;
 
-	return const_cast<self_t&>(*this);
+    ostream                 << "JA: ";
+
+    for( TIdx i1 = 0; i1 < size_a; i1++ ) {
+        ostream             << ja[i1] << " ";
+    } 	ostream             << std::endl;
+    ostream                 << "IA: ";
+    for( TIdx i1 = 0; i1 < rows + 1; i1++ ) {
+        ostream             << ( *ia )[i1] << " ";
+    } 	ostream             << std::endl;
+	
+    return                  ( const_cast<self_t&>(*this) );
 }
 
-_TMPL_DECL_		self_t&		self_t::operator=(const self_t& a) {
-	ja		= a.ja;
-	ia		= a.ia;
-	this->a = a.a;
-	nnz		= a.nnz;
-	rows	= a.rows;
-	cols	= a.cols;
-	size_a	= a.size_a;
-	return *this;
+_TMPL_DECL_		self_t&		self_t::operator=( const self_t& a ) {
+	ja		                = a.ja;
+	ia		                = a.ia;
+	this->a                 = a.a;
+	nnz		                = a.nnz;
+	rows	                = a.rows;
+	cols	                = a.cols;
+	size_a	                = a.size_a;
+
+	return                  ( * this );
 }

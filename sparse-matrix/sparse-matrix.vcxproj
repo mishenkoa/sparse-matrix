@@ -77,7 +77,10 @@
     <LibraryPath>A:\~3rdPartyDependency\boost_1_60_0\stage\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>D:\YandexDisk\GameData\~3rdPartyDependency\boost_1_60_0;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>A:\~3rdPartyDependency\boost_1_60_0;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>A:\~3rdPartyDependency\boost_1_60_0;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -124,10 +127,13 @@
     <ClInclude Include="comp_array_inl.h" />
     <ClInclude Include="csr_mat.h" />
     <ClInclude Include="csr_mat_inl.h" />
+    <ClInclude Include="project_unit_tests.h" />
     <ClInclude Include="types.h" />
+    <ClInclude Include="unit_test.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="unit_test.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
