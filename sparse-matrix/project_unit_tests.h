@@ -194,8 +194,8 @@ bool csr_mat_test_add       () {
         int_mat_data        { 0, 1, 20 },
         int_mat_data        { 2, 2, 50 },
         int_mat_data        { 2, 3, 30 },
-        int_mat_data        { 2, 4, 70 },
         int_mat_data        { 5, 5, 123 },
+        int_mat_data        { INT_MAX - 1, INT_MAX - 1, 70 },
     };
     container::vector<int_mat_data> v2 = {
         int_mat_data        { 2, 2, -50 },
@@ -203,6 +203,7 @@ bool csr_mat_test_add       () {
         int_mat_data        { 2, 4, 70 },
         int_mat_data        { 3, 3, 80 },
         int_mat_data        { 3, 5, 80 },
+        int_mat_data        { INT_MAX - 1, INT_MAX - 1, 70 },
     };
     container::vector<int_mat_data> res2 = {
         int_mat_data        { 0, 0, 10 },
@@ -210,11 +211,12 @@ bool csr_mat_test_add       () {
         int_mat_data        { 2, 3, 100 },
         int_mat_data        { 3, 3, 80 },
         int_mat_data        { 3, 5, 80 },
-        int_mat_data        { 2, 4, 140 },
+        int_mat_data        { 2, 4, 70 },
         int_mat_data        { 5, 5, 123 },
+        int_mat_data        { INT_MAX - 1, INT_MAX - 1, 140 },
     };
 
-    u64 max                 = 10000000000000000000;
+    u64 max                 = INT_MAX;
     auto mat1               = int_mat( max, max, v1 );
     auto mat2               = int_mat( max, max, v2 );
 

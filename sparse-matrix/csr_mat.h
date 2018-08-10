@@ -1,7 +1,7 @@
 //  
 // Created  : 10.05.2016
 // Author   : Veyroter
-// © AshyCat, 2016 
+// ï¿½ AshyCat, 2016 
 //  
 #pragma once
 #include <iomanip>
@@ -35,7 +35,7 @@ public:
 		TVal        val;
 
 		            csr_data    ( TIdx i, TIdx j, TVal val ) : i( i ), j( j ), val( val ) {}
-		auto        to_string   ()      __ret ( format( "(%1%, %2%, %3%)" ) % i % j % val )
+		auto        to_string   ()      sparse_ret ( format( "(%1%, %2%, %3%)" ) % i % j % val )
 	};
 	
 //---------------------------------- Data

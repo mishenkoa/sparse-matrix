@@ -32,8 +32,8 @@ struct comp_array {
         comp_iterator( self_t * arr ) : arr( arr ), i( -1 ), j( -1 ) { }
 
         // returns (idx, val)
-        auto        current     ()  __ret( make_tuple( j, arr->arr[i] ) )
-        bool        end         ()  __ret( j >= arr->size_real )
+        auto        current     ()  sparse_ret( make_tuple( j, arr->arr[i] ) )
+        bool        end         ()  sparse_ret( j >= arr->size_real )
 
         // returns false when it ends
         bool        next        () {
@@ -53,8 +53,8 @@ struct comp_array {
         comp_iterator_prev( self_t * arr ) : arr( arr ), i( -1 ), j( -1 ) { }
 
         // returns (idx, val, previous val)
-        auto        current     ()  __ret( make_tuple( j, arr->arr[i], arr->arr[i <= 0 ? i : i - 1] ) )
-        bool        end         ()  __ret( j >= arr->size_real )
+        auto        current     ()  sparse_ret( make_tuple( j, arr->arr[i], arr->arr[i <= 0 ? i : i - 1] ) )
+        bool        end         ()  sparse_ret( j >= arr->size_real )
 
         // returns false when it ends
         bool        next        () {
@@ -74,8 +74,8 @@ struct comp_array {
         uncomp_iterator ( self_t * arr ) : arr( arr ), i( -1 ), j( -1 ), strike( 0 ) { }
 
         // returns (idx, val)
-        auto        current     ()  __ret( make_tuple( j, arr->arr[i] ) )
-        bool        end         ()  __ret( j >= arr->size_real )
+        auto        current     ()  sparse_ret( boost::tuples::make_tuple( j, arr->arr[i] ) )
+        bool        end         ()  sparse_ret( j >= arr->size_real )
 
         // returns false when it ends
         bool        next        () {
@@ -112,11 +112,11 @@ public:
     self_t&					out                     ( std::ostream& ostream );
     TVal					operator[]              ( const TIdx idx ) const;
     bool					eq                      ( self_t& a );
-    comp_iterator			get_comp_iterator       () __ret( comp_iterator( this ) )
-    comp_iterator_prev		get_comp_iterator_prev  () __ret( comp_iterator_prev( this ) )
-    uncomp_iterator			get_uncomp_iterator     () __ret( uncomp_iterator( this ) )
-    size_t					get_uncompressed_size   () const __ret( size_real * 4 )					        // in bytes
-    size_t					get_size                () const __ret( sizeof( *this ) + 4 * size_comp )       // in bytes
+    comp_iterator			get_comp_iterator       () sparse_ret( comp_iterator( this ) )
+    comp_iterator_prev		get_comp_iterator_prev  () sparse_ret( comp_iterator_prev( this ) )
+    uncomp_iterator			get_uncomp_iterator     () sparse_ret( uncomp_iterator( this ) )
+    size_t					get_uncompressed_size   () const sparse_ret( size_real * 4 )					        // in bytes
+    size_t					get_size                () const sparse_ret( sizeof( *this ) + 4 * size_comp )       // in bytes
 
     template<typename T>
     static self_t*          construct               ( T _arr, TIdx _size_real, std::map<TIdx, TIdx> _comp_elms );

@@ -80,14 +80,14 @@ _TMPL_DECL_ self_t&		self_t::out         ( std::ostream& ostream ) {
 
     for( uncomp_iterator* it = new uncomp_iterator( this ); it->next(); ) {
         //ostream << format( "(idx: %1%, val: %2%)\n" ) % it->current().get<0>() % it->current().get<1>();
-        ostream << it->current().get<1>() << " ";
+        ostream << boost::tuples::get<1>(it->current()) << " ";
     }
 
     return const_cast< self_t& >( *this );
 }
 
 _TMPL_DECL_ template<typename T>
-static self_t*          self_t::construct   ( T _arr, TIdx _size_real, std::map<TIdx, TIdx> _comp_elms ) {
+self_t*          self_t::construct   ( T _arr, TIdx _size_real, std::map<TIdx, TIdx> _comp_elms ) {
     auto result             = new comp_array();
     result->size_comp       = ( TIdx ) _arr.size();
     result->arr             = __new( TVal, result->size_comp );
@@ -112,8 +112,8 @@ _TMPL_DECL_ bool	    self_t::eq          ( self_t& a ) {
         if( t_it.end() ) {
             return a_it.end();
         }
-        if( t_it.current().get<0>() != a_it.current().get<0>() || 
-            t_it.current().get<1>() != a_it.current().get<1>() ) {
+        if( boost::tuples::get<0>(t_it.current()) != boost::tuples::get<0>(a_it.current()) || 
+            boost::tuples::get<1>(t_it.current()) != boost::tuples::get<1>(a_it.current()) ) {
             return false;
         }
     }

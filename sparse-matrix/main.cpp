@@ -7,8 +7,8 @@
 #include "project_unit_tests.h"
 
 int main() {
-	typedef csr_mat<s32, s32>				int_mat;
-	typedef csr_mat<s32, s32>::csr_data		int_mat_data;
+	// typedef csr_mat<s32, s32>				int_mat;
+	// typedef csr_mat<s32, s32>::csr_data		int_mat_data;
 
 	//container::vector<int_mat_data> v = {
 	//	int_mat_data{ 2, 2, 50 },

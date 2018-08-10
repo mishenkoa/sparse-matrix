@@ -20,7 +20,7 @@ void unit_test::out_results( std::ostream & out ) {
     if( failed.size() ) {
         out                 << "Unit tests failed! Errors in: " << std::endl;
 
-        for each ( pcstr fname in failed ) {
+        for ( pcstr fname : failed ) {
             out             << "\t" << fname << std::endl;
         }
     } else {

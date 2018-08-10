@@ -101,7 +101,7 @@ _TMPL_DECL_		ICF TVal*	self_t::get_ref( TIdx row, TIdx col ) const {
             &col,                   // what we are looking for
             ja.get() + idx_from,    // base pointer
             idx_to - idx_from + 1,  // number of elements
-            sizeof TIdx,            // size of one element
+            sizeof(TIdx),            // size of one element
             comparator              // comparator function
             )
         );
@@ -132,28 +132,28 @@ _TMPL_DECL_	    self_t&		self_t::add( const self_t &a ) {
     TIdx    to_add_i;
     
     do {
-        if( ti_it.current().get<0>() < ai_it.current().get<0>() ) {
+        if( boost::tuples::get<0>(ti_it.current()) < boost::tuples::get<0>(ai_it.current()) ) {
             a_end           = true;
             t_end           = false;
-            tj_from         = ti_it.current().get<2>();
-            tj_to           = ti_it.current().get<1>() - 1;
-            to_add_i        = ti_it.current().get<0>() - 1;
+            tj_from         = boost::tuples::get<2>(ti_it.current());
+            tj_to           = boost::tuples::get<1>(ti_it.current()) - 1;
+            to_add_i        = boost::tuples::get<0>(ti_it.current()) - 1;
             ti_it.next      ();
-        } else if( ti_it.current().get<0>() > ai_it.current().get<0>() ) {
+        } else if( boost::tuples::get<0>(ti_it.current()) > boost::tuples::get<0>(ai_it.current()) ) {
             t_end           = true;
             a_end           = false;
-            aj_from         = ai_it.current().get<2>();
-            aj_to           = ai_it.current().get<1>() - 1;
-            to_add_i        = ai_it.current().get<0>() - 1;
+            aj_from         = boost::tuples::get<2>(ai_it.current());
+            aj_to           = boost::tuples::get<1>(ai_it.current()) - 1;
+            to_add_i        = boost::tuples::get<0>(ai_it.current()) - 1;
             ai_it.next      ();
         } else {
-            tj_from         = ti_it.current().get<2>();
-            tj_to           = ti_it.current().get<1>() - 1;
-            aj_from         = ai_it.current().get<2>();
-            aj_to           = ai_it.current().get<1>() - 1;
+            tj_from         = boost::tuples::get<2>(ti_it.current());
+            tj_to           = boost::tuples::get<1>(ti_it.current()) - 1;
+            aj_from         = boost::tuples::get<2>(ai_it.current());
+            aj_to           = boost::tuples::get<1>(ai_it.current()) - 1;
             t_end           = tj_from >= tj_to + 1; 
             a_end           = aj_from >= aj_to + 1; 
-            to_add_i        = ti_it.current().get<0>() - 1;
+            to_add_i        = boost::tuples::get<0>(ti_it.current()) - 1;
             ti_it.next      ();
             ai_it.next      ();
         }
@@ -207,28 +207,28 @@ _TMPL_DECL_		self_t&		self_t::sub( const self_t &a ) {
 	TIdx    to_add_i;
 
 	do {
-		if (ti_it.current().get<0>() < ai_it.current().get<0>()) {
+		if (boost::tuples::get<0>(ti_it.current()) < boost::tuples::get<0>(ai_it.current())) {
 			a_end           = true;
 			t_end           = false;
-			tj_from         = ti_it.current().get<2>();
-			tj_to           = ti_it.current().get<1>() - 1;
-			to_add_i        = ti_it.current().get<0>() - 1;
+			tj_from         = boost::tuples::get<2>(ti_it.current());
+			tj_to           = boost::tuples::get<1>(ti_it.current()) - 1;
+			to_add_i        = boost::tuples::get<0>(ti_it.current()) - 1;
 			ti_it.next  ();
-		} else if ( ti_it.current().get<0>() > ai_it.current().get<0>() ) {
+		} else if ( boost::tuples::get<0>(ti_it.current()) > boost::tuples::get<0>(ai_it.current()) ) {
 			t_end           = true;
 			a_end           = false;
-			aj_from         = ai_it.current().get<2>();
-			aj_to           = ai_it.current().get<1>() - 1;
-			to_add_i        = ai_it.current().get<0>() - 1;
+			aj_from         = boost::tuples::get<2>(ai_it.current());
+			aj_to           = boost::tuples::get<1>(ai_it.current()) - 1;
+			to_add_i        = boost::tuples::get<0>(ai_it.current()) - 1;
 			ai_it.next      ();
 		} else {
-			tj_from         = ti_it.current().get<2>();
-			tj_to           = ti_it.current().get<1>() - 1;
-			aj_from         = ai_it.current().get<2>();
-			aj_to           = ai_it.current().get<1>() - 1;
+			tj_from         = boost::tuples::get<2>(ti_it.current());
+			tj_to           = boost::tuples::get<1>(ti_it.current()) - 1;
+			aj_from         = boost::tuples::get<2>(ai_it.current());
+			aj_to           = boost::tuples::get<1>(ai_it.current()) - 1;
 			t_end           = tj_from >= tj_to + 1; 
 			a_end           = aj_from >= aj_to + 1; 
-			to_add_i        = ti_it.current().get<0>() - 1;
+			to_add_i        = boost::tuples::get<0>(ti_it.current()) - 1;
 			ti_it.next();
 			ai_it.next();
 		}

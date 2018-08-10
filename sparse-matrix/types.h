@@ -1,12 +1,11 @@
 //  
 // Created  : 10.05.2016
 // Author   : Veyroter
-// © AshyCat, 2016 
+// (C) AshyCat, 2016 
 //  
 #pragma once
-#define BOOST_MSVC_STD_ITERATOR
 #define IC inline
-#define ICF __forceinline
+#define ICF inline
 
 #include <exception>
 
@@ -40,6 +39,6 @@ typedef	void const*				pcvoid;
 
 // OUR NEW C++ FEATURES
 
-#define __ret(DATA)             { return DATA; }
+#define sparse_ret(...)             { return __VA_ARGS__; }
 #define __new(TYPE, SIZE)       ( TYPE * ) malloc( SIZE * sizeof( TYPE ) )
 #define __delete(POINTER)       free( POINTER )

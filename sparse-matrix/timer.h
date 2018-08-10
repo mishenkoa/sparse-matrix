@@ -5,7 +5,7 @@
 // This product are licensed under MICROSOFT REFERENCE SOURCE LICENSE(MS-RSL).
 // 
 #pragma once
-#include <intrin.h>
+// #include <intrin.h>
 #include <ctime>
 #include "types.h"
 
